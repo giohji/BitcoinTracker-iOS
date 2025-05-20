@@ -1,0 +1,64 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build directory
+Build/
+build/
+DerivedData/
+
+# Various Xcode files
+*.xccheckout
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/project.xcworkspace/
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/xcuserdata/
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.xcscheme
+*.xcworkspace
+
+# Accidental commit of sensitive info
+*.key
+*.pem
+*.p12
+*.cer
+*.mobileprovision
+*.env
+.env.*
+secrets.json
+*.keyservice
+*credentials*
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/DerivedData/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# User-specific files
+xcuserdata/
+*.xcuserdatad
+
+# Localizations / Storyboards
+*.strings
+*.storyboardc
+*.nib
+*.xib
+
+# Test results
+*.test_result
+
+# Other
+*.moved-aside
+*.swp
+*~.nib
+profile_output
