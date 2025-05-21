@@ -1,0 +1,10 @@
+//
+//  Keys.xcconfig
+//  BitcoinTracker
+//
+//  Created by Guilherme Giohji Hoshino on 21/05/2025.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+COINGECKO_DEMO_API_KEY = "YOUR_COINGECKO_DEMO_API_KEY"

@@ -20,6 +20,7 @@ DerivedData/
 *.xcscmblueprint
 *.xcscheme
 *.xcworkspace
+Keys.xcconfig
 
 # Accidental commit of sensitive info
 *.key
