@@ -33,14 +33,14 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
     }
 
     // MARK: - Fetch Historical Bitcoin Prices
-    func fetchPriceHistory(from: TimeInterval, to: TimeInterval) async throws -> MarketChartRangeResponse {
-        guard var components = URLComponents(url: baseURL.appendingPathComponent("coins/bitcoin/market_chart/range"), resolvingAgainstBaseURL: true) else {
+    func fetchPriceHistory(days: Int) async throws -> MarketChartRangeResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("coins/bitcoin/market_chart"), resolvingAgainstBaseURL: true) else {
             throw NetworkError.invalidURL
         }
         components.queryItems = [
             URLQueryItem(name: "vs_currency", value: "eur"),
-            URLQueryItem(name: "from", value: String(Int(from))),
-            URLQueryItem(name: "to", value: String(Int(to)))
+            URLQueryItem(name: "days", value: String(days)),
+            URLQueryItem(name: "interval", value: "daily")
         ]
 
         guard let url = components.url else {

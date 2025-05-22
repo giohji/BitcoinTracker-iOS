@@ -8,5 +8,5 @@ import Foundation
 
 protocol BitcoinNetworkingProtocol: Sendable {
     func fetchCurrentPrice() async throws -> SimplePriceResponse
-    func fetchPriceHistory(from: TimeInterval, to: TimeInterval) async throws -> MarketChartRangeResponse
+    func fetchPriceHistory(days: Int) async throws -> MarketChartRangeResponse
 }
