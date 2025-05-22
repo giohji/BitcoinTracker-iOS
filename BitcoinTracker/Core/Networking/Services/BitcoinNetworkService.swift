@@ -77,7 +77,7 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
     private func performRequest<T: Codable>(url: URL) async throws -> T {
         var request = URLRequest(url: url)
         // Use demo API key if available, if Keys.xcconfig is removed from project the API is still accessible through public keyless API for now.
-        if let apiKey = Configuration.coingeckoDemoAPIKey {
+        if let apiKey = Configuration.coingeckoDemoAPIKey, !apiKey.isEmpty {
             request.setValue(apiKey, forHTTPHeaderField: "x-cg-demo-api-key")
         }
         request.setValue("application/json", forHTTPHeaderField: "accept")
