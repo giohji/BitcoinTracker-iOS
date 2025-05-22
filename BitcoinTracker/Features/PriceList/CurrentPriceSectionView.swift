@@ -37,6 +37,8 @@ struct CurrentPriceSectionView: View {
                     ProgressView()
                     Text("Fetching current price...").padding(.leading, 5)
                 }
+                .id(UUID())
+                .frame(minHeight: 54)
             case .loaded(let price, let lastUpdated):
                 VStack(alignment: .leading, spacing: 8) {
                     Text(price)

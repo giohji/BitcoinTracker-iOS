@@ -26,7 +26,7 @@ struct PriceListView: View {
             .navigationTitle("Bitcoin Tracker")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    if case .loading = viewModel.currentPriceState, case .loading = viewModel.historicalPricesState {
+                    if viewModel.currentPriceState.isLoading || viewModel.historicalPricesState.isLoading {
                         ProgressView()
                     } else {
                         Button {

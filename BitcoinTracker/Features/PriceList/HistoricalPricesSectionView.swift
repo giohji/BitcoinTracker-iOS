@@ -47,6 +47,7 @@ struct HistoricalPricesSectionView: View {
                     ProgressView()
                     Text("Fetching history...").padding(.leading, 5)
                 }
+                .id(UUID())
             case .loaded(let prices):
                 if prices.isEmpty {
                     Text("No historical data available.")
