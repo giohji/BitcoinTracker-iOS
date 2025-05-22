@@ -53,8 +53,17 @@ final class PriceListViewModelTests: XCTestCase {
         await viewModel.refreshData()
         
         // Verify current price state
-        if case .loaded(let price) = viewModel.currentPriceState {
+        if case .loaded(let price, let lastUpdated) = viewModel.currentPriceState {
             XCTAssertEqual(price, "€45,000.00")
+            
+            // Create expected date format
+            let expectedDate = Date(timeIntervalSince1970: TimeInterval(Int(timestamp.timeIntervalSince1970)))
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d, yyyy HH:mm:ss"
+            formatter.timeZone = .current
+            let expectedDateString = formatter.string(from: expectedDate)
+            
+            XCTAssertEqual(lastUpdated, expectedDateString)
         } else {
             XCTFail("Current price state should be loaded")
         }

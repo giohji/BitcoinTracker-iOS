@@ -64,11 +64,22 @@ class PriceListViewModel: ObservableObject {
         timerSubscription = nil
     }
 
+    private func formatDateTime(_ timestamp: Int) -> String {
+        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy HH:mm:ss"
+        formatter.timeZone = .current
+        return formatter.string(from: date)
+    }
+
     private func fetchCurrentPrice() async {
         do {
             let response = try await networkService.fetchCurrentPrice()
-            if let eurPrice = response.bitcoin?.eur {
-                currentPriceState = .loaded(price: eurPrice.formatAsCurrency(.eur))
+            if let eurPrice = response.bitcoin?.eur, let lastUpdated = response.bitcoin?.lastUpdatedAt {
+                currentPriceState = .loaded(
+                    price: eurPrice.formatAsCurrency(.eur),
+                    lastUpdated: formatDateTime(lastUpdated)
+                )
             } else {
                 currentPriceState = .error(message: "Price data not available")
             }

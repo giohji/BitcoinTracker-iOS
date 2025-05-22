@@ -66,7 +66,7 @@ struct HistoricalPricesSectionView: View {
                 }
             case .error:
                 Text("Failed to load historical data")
-                    .foregroundColor(.red)
+                    .foregroundColor(.secondary)
             }
         }
     }

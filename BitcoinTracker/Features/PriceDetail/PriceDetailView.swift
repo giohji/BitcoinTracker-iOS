@@ -59,13 +59,6 @@ struct PriceDetailView: View {
                             .fontWeight(.semibold)
                     }
                 }
-
-                if case .error(let message) = viewModel.priceState {
-                    Text(message)
-                        .foregroundColor(.red)
-                        .font(.footnote)
-                        .padding(.top, 4)
-                }
             }
         }
         .navigationTitle(viewModel.navigationTitle)

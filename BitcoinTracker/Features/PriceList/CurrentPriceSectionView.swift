@@ -8,19 +8,8 @@ import SwiftUI
 
 enum CurrentPriceState: Equatable {
     case loading
-    case loaded(price: String)
+    case loaded(price: String, lastUpdated: String)
     case error(message: String)
-    
-    var displayPrice: String {
-        switch self {
-        case .loading:
-            return "Loading..."
-        case .loaded(let price):
-            return price
-        case .error:
-            return "Error"
-        }
-    }
     
     var isLoading: Bool {
         if case .loading = self {
@@ -48,15 +37,20 @@ struct CurrentPriceSectionView: View {
                     ProgressView()
                     Text("Fetching current price...").padding(.leading, 5)
                 }
-            case .loaded(let price):
-                Text(price)
-                    .font(.title2)
-                    .fontWeight(.bold)
+            case .loaded(let price, let lastUpdated):
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(price)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("Updated at \(lastUpdated)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             case .error:
-                Text("Error")
+                Text("N/A")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.red)
+                    .foregroundColor(.secondary)
             }
         }
     }
