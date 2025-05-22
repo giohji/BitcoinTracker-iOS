@@ -17,11 +17,14 @@ class PriceListViewModel: ObservableObject {
 
     private let networkService: BitcoinNetworkingProtocol
     private let calendar = Calendar.current
-    private var timerSubscription: AnyCancellable?
+    private let timerInterval: TimeInterval
+    var timerSubscription: AnyCancellable?
 
     // Dependency injection for network service (allows mocking for tests)
-    init(networkService: BitcoinNetworkingProtocol = BitcoinNetworkService()) {
+    init(networkService: BitcoinNetworkingProtocol = BitcoinNetworkService(),
+         timerInterval: TimeInterval = 60) {
         self.networkService = networkService
+        self.timerInterval = timerInterval
     }
 
     func refreshData() async {

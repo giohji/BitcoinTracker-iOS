@@ -9,9 +9,9 @@ import Foundation
 final class BitcoinNetworkService: BitcoinNetworkingProtocol {
 
     private let baseURL = URL(string: "https://api.coingecko.com/api/v3")!
-    private let session: URLSession
+    private let session: NetworkFetching
 
-    init(session: URLSession = .shared) {
+    init(session: NetworkFetching = URLSession.shared) {
         self.session = session
     }
 
@@ -81,27 +81,43 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
         }
         request.setValue("application/json", forHTTPHeaderField: "accept")
 
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NetworkError.unknownResponseType
-        }
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.serverError(statusCode: httpResponse.statusCode, data: data)
-        }
-
         do {
-            let decodedResponse = try JSONDecoder().decode(T.self, from: data)
-            return decodedResponse
-        } catch let decodingError {
-            // Log the raw data if decoding fails, which can be helpful for debugging
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Failed to decode JSON. Raw data: \(jsonString)")
-            } else {
-                print("Failed to decode JSON and could not convert data to UTF-8 string.")
+            let (data, response) = try await session.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.unknownResponseType
             }
-            throw NetworkError.decodingError(decodingError)
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw NetworkError.serverError(statusCode: httpResponse.statusCode, data: data)
+            }
+
+            do {
+                let decodedResponse = try JSONDecoder().decode(T.self, from: data)
+                return decodedResponse
+            } catch let decodingError {
+                // Log the raw data if decoding fails, which can be helpful for debugging
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Failed to decode JSON. Raw data: \(jsonString)")
+                } else {
+                    print("Failed to decode JSON and could not convert data to UTF-8 string.")
+                }
+                throw NetworkError.decodingError(decodingError)
+            }
+        } catch let error as NetworkError {
+            throw error
+        } catch let error as URLError {
+            // Map URLError to appropriate NetworkError
+            switch error.code {
+            case .badURL, .unsupportedURL:
+                throw NetworkError.invalidURL
+            default:
+                // For network connectivity issues and other URLErrors, treat as a server error
+                throw NetworkError.serverError(statusCode: 0, data: nil)
+            }
+        } catch {
+            // For any other unexpected errors
+            throw NetworkError.serverError(statusCode: 0, data: nil)
         }
     }
 }
