@@ -22,7 +22,8 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
         }
         components.queryItems = [
             URLQueryItem(name: "ids", value: "bitcoin"),
-            URLQueryItem(name: "vs_currencies", value: "eur")
+            URLQueryItem(name: "vs_currencies", value: "eur"),
+            URLQueryItem(name: "precision", value: "full")
         ]
 
         guard let url = components.url else {
