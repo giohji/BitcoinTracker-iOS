@@ -33,7 +33,7 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
     }
 
     // MARK: - Fetch Historical Bitcoin Prices
-    func fetchPriceHistory(days: Int) async throws -> MarketChartRangeResponse {
+    func fetchPriceHistory(days: Int) async throws -> MarketChartResponse {
         guard var components = URLComponents(url: baseURL.appendingPathComponent("coins/bitcoin/market_chart"), resolvingAgainstBaseURL: true) else {
             throw NetworkError.invalidURL
         }
@@ -47,6 +47,27 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
             throw NetworkError.invalidURL
         }
 
+        return try await performRequest(url: url)
+    }
+    
+    // MARK: - Fetch Historical Bitcoin Price for a given date in all currencies
+    func fetchPriceHistory(date: Date) async throws -> HistoryResponse {
+        guard var components = URLComponents(url: baseURL.appendingPathComponent("coins/bitcoin/history"), resolvingAgainstBaseURL: true) else {
+            throw NetworkError.invalidURL
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd-MM-yyyy"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        let dateString = formatter.string(from: date)
+
+        components.queryItems = [
+            URLQueryItem(name: "date", value: dateString)
+        ]
+
+        guard let url = components.url else {
+            throw NetworkError.invalidURL
+        }
         return try await performRequest(url: url)
     }
 

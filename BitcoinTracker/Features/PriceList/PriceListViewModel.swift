@@ -141,10 +141,9 @@ class PriceListViewModel: ObservableObject {
     private func createDailyPrice(timestamp: Double, price: Double) -> (day: Date, price: DailyBitcoinPrice)? {
         let date = Date(timeIntervalSince1970: timestamp / 1000)
         let dayStart = Self.utcCalendar.startOfDay(for: date)
-        // Only include the entry if the timestamp is the start of the day
         guard date == dayStart else {
             return nil
         }
-        return (dayStart, DailyBitcoinPrice(id: dayStart, date: date, price: price))
+        return (dayStart, DailyBitcoinPrice(id: dayStart, date: date, prices: [.eur: price]))
     }
 }

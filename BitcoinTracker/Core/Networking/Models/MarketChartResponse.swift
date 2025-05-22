@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct MarketChartRangeResponse: Codable {
+struct MarketChartResponse: Codable {
     let prices: [[Double]]?
     let marketCaps: [[Double]]?
     let totalVolumes: [[Double]]?

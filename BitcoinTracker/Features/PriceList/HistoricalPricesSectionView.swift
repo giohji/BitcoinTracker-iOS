@@ -58,7 +58,7 @@ struct HistoricalPricesSectionView: View {
                                 Text(dailyPrice.formattedDate)
                                     .fontWeight(.medium)
                                 Spacer()
-                                Text(dailyPrice.formattedPrice)
+                                Text(dailyPrice.formattedEURPrice ?? "N/A")
                                     .foregroundColor(.gray)
                             }
                         }
