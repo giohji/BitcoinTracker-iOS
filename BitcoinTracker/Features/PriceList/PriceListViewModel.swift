@@ -5,74 +5,19 @@
 //  Created by Guilherme Giohji Hoshino on 21/05/2025.
 //
 import SwiftUI
-
-enum CurrentPriceState: Equatable {
-    case loading
-    case loaded(price: String)
-    case error(message: String)
-    
-    var displayPrice: String {
-        switch self {
-        case .loading:
-            return "Loading..."
-        case .loaded(let price):
-            return price
-        case .error:
-            return "Error"
-        }
-    }
-    
-    var isLoading: Bool {
-        if case .loading = self {
-            return true
-        }
-        return false
-    }
-    
-    var errorMessage: String? {
-        if case .error(let message) = self {
-            return message
-        }
-        return nil
-    }
-}
-
-enum HistoricalPricesState: Equatable {
-    case loading
-    case loaded(prices: [DailyBitcoinPrice])
-    case error(message: String)
-    
-    var prices: [DailyBitcoinPrice] {
-        switch self {
-        case .loading, .error:
-            return []
-        case .loaded(let prices):
-            return prices
-        }
-    }
-    
-    var isLoading: Bool {
-        if case .loading = self {
-            return true
-        }
-        return false
-    }
-    
-    var errorMessage: String? {
-        if case .error(let message) = self {
-            return message
-        }
-        return nil
-    }
-}
+import Combine
 
 @MainActor
 class PriceListViewModel: ObservableObject {
     @Published var currentPriceState: CurrentPriceState = .loading
     @Published var historicalPricesState: HistoricalPricesState = .loading
+    
+    private var historicalPrices: [Date: DailyBitcoinPrice] = [:]
+    private var lastFetchedDate: Date?
 
     private let networkService: BitcoinNetworkingProtocol
     private let calendar = Calendar.current
+    private var timerSubscription: AnyCancellable?
 
     // Dependency injection for network service (allows mocking for tests)
     init(networkService: BitcoinNetworkingProtocol = BitcoinNetworkService()) {
@@ -80,15 +25,40 @@ class PriceListViewModel: ObservableObject {
     }
 
     func refreshData() async {
-        // Reset states at the start of a refresh
-        currentPriceState = .loading
-        historicalPricesState = .loading
+        let today = Self.utcCalendar.startOfDay(for: Date())
+        let needsHistoricalUpdate = lastFetchedDate == nil || lastFetchedDate! < today
         
-        // Run fetches concurrently using a task group
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { await self.fetchCurrentPrice() }
-            group.addTask { await self.fetchAndProcessPriceHistory() }
+        // Reset current price state as we always want fresh price
+        currentPriceState = .loading
+        
+        // Only set historical prices to loading if we need to fetch them
+        if needsHistoricalUpdate {
+            historicalPricesState = .loading
         }
+        
+        // Always fetch current price
+        async let currentPrice: () = fetchCurrentPrice()
+        
+        // Only fetch historical prices if needed
+        async let priceHistory: () = needsHistoricalUpdate ? fetchAndProcessPriceHistory() : ()
+        
+        // Wait for operations to complete
+        await (_, _) = (currentPrice, priceHistory)
+    }
+    
+    func startAutoRefresh() {
+        timerSubscription = Timer.publish(every: 60, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                Task {
+                    await self?.refreshData()
+                }
+            }
+    }
+    
+    func stopAutoRefresh() {
+        timerSubscription?.cancel()
+        timerSubscription = nil
     }
 
     private func fetchCurrentPrice() async {
@@ -106,9 +76,27 @@ class PriceListViewModel: ObservableObject {
     }
 
     private func fetchAndProcessPriceHistory() async {
+        let today = Self.utcCalendar.startOfDay(for: Date())
+        
+        // If we have recent data and it's from today, just update the UI
+        if let lastFetched = lastFetchedDate,
+           lastFetched == today,
+           !historicalPrices.isEmpty {
+            updateHistoricalPricesState()
+            return
+        }
+        
         do {
-            let response = try await networkService.fetchPriceHistory(days: 14)
+            // Determine how many days of data we need
+            var daysToFetch = 14
+            if let lastFetched = lastFetchedDate,
+               let daysDiff = Self.utcCalendar.dateComponents([.day], from: lastFetched, to: today).day {
+                daysToFetch = min(daysDiff + 1, 14) // +1 to include today
+            }
+            
+            let response = try await networkService.fetchPriceHistory(days: daysToFetch)
             processDailyData(response.prices)
+            lastFetchedDate = today
         } catch {
             print("Error fetching price history: \(error.localizedDescription)")
             historicalPricesState = .error(message: "Failed to load history: \(error.localizedDescription)")
@@ -127,14 +115,27 @@ class PriceListViewModel: ObservableObject {
             return
         }
 
-        let dailyPrices = pricesData.compactMap { entry -> DailyBitcoinPrice? in
-            guard entry.count == 2 else { return nil }
-            return createDailyPrice(timestamp: entry[0], price: entry[1])?.price
+        let today = Self.utcCalendar.startOfDay(for: Date())
+        
+        // Process new data
+        for entry in pricesData {
+            guard entry.count == 2,
+                  let (day, price) = createDailyPrice(timestamp: entry[0], price: entry[1]) else { continue }
+            historicalPrices[day] = price
         }
         
-        historicalPricesState = dailyPrices.isEmpty 
+        // Remove data older than 14 days
+        let oldestAllowedDate = Self.utcCalendar.date(byAdding: .day, value: -14, to: today)!
+        historicalPrices = historicalPrices.filter { $0.key >= oldestAllowedDate }
+        
+        updateHistoricalPricesState()
+    }
+    
+    private func updateHistoricalPricesState() {
+        let sortedPrices = historicalPrices.values.sorted { $0.date > $1.date }
+        historicalPricesState = sortedPrices.isEmpty
             ? .error(message: "No valid price data found")
-            : .loaded(prices: dailyPrices.sorted { $0.date > $1.date })
+            : .loaded(prices: sortedPrices)
     }
     
     private func createDailyPrice(timestamp: Double, price: Double) -> (day: Date, price: DailyBitcoinPrice)? {

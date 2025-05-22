@@ -9,60 +9,19 @@ import SwiftUI
 struct PriceListView: View {
     @StateObject var viewModel: PriceListViewModel
     @State private var showingErrorAlert = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationView {
             List {
-                // Section for Current Price
-                Section(header: Text("Current Price (BTC/EUR)").font(.headline)) {
-                    switch viewModel.currentPriceState {
-                    case .loading:
-                        HStack {
-                            ProgressView()
-                            Text("Fetching current price...").padding(.leading, 5)
-                        }
-                    case .loaded(let price):
-                        Text(price)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                    case .error:
-                        Text("Error")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.red)
+                CurrentPriceSectionView(currentPriceState: viewModel.currentPriceState)
+                    .onAppear {
+                        viewModel.startAutoRefresh()
                     }
-                }
-
-                // Section for Historical Prices
-                Section(header: Text("Last 14 Days (Daily)").font(.headline)) {
-                    switch viewModel.historicalPricesState {
-                    case .loading:
-                        HStack {
-                            ProgressView()
-                            Text("Fetching history...").padding(.leading, 5)
-                        }
-                    case .loaded(let prices):
-                        if prices.isEmpty {
-                            Text("No historical data available.")
-                                .foregroundColor(.secondary)
-                        } else {
-                            ForEach(prices) { dailyPrice in
-                                NavigationLink(destination: PriceDetailView(viewModel: PriceDetailViewModel(dailyPrice: dailyPrice))) {
-                                    HStack {
-                                        Text(dailyPrice.formattedDate)
-                                            .fontWeight(.medium)
-                                        Spacer()
-                                        Text(dailyPrice.formattedPrice)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                        }
-                    case .error:
-                        Text("Failed to load historical data")
-                            .foregroundColor(.red)
+                    .onDisappear {
+                        viewModel.stopAutoRefresh()
                     }
-                }
+                HistoricalPricesSectionView(historicalPricesState: viewModel.historicalPricesState)
             }
             .navigationTitle("Bitcoin Tracker")
             .toolbar {
@@ -107,6 +66,16 @@ struct PriceListView: View {
             .onChange(of: viewModel.historicalPricesState) { newValue in
                 if case .error = newValue {
                     showingErrorAlert = true
+                }
+            }
+            .onChange(of: scenePhase) { phase in
+                switch phase {
+                case .background:
+                    viewModel.stopAutoRefresh()
+                case .active:
+                    viewModel.startAutoRefresh()
+                default:
+                    break
                 }
             }
         }
