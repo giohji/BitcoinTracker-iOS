@@ -146,7 +146,9 @@ final class BitcoinNetworkServiceTests: XCTestCase {
         // Test different error scenarios
         let testCases: [(Error, NetworkError)] = [
             (URLError(.badURL), .invalidURL),
-            (URLError(.notConnectedToInternet), NetworkError.serverError(statusCode: 0, data: nil))
+            (URLError(.notConnectedToInternet), .networkConnectivity(URLError(.notConnectedToInternet))),
+            (URLError(.networkConnectionLost), .networkConnectivity(URLError(.networkConnectionLost))),
+            (URLError(.dataNotAllowed), .networkConnectivity(URLError(.dataNotAllowed)))
         ]
         
         for (inputError, expectedError) in testCases {
@@ -162,6 +164,9 @@ final class BitcoinNetworkServiceTests: XCTestCase {
                         // Test passed
                         break
                     case (.serverError(let code1, _), .serverError(let code2, _)) where code1 == code2:
+                        // Test passed
+                        break
+                    case (.networkConnectivity, .networkConnectivity):
                         // Test passed
                         break
                     default:

@@ -111,8 +111,10 @@ final class BitcoinNetworkService: BitcoinNetworkingProtocol {
             switch error.code {
             case .badURL, .unsupportedURL:
                 throw NetworkError.invalidURL
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
+                throw NetworkError.networkConnectivity(error)
             default:
-                // For network connectivity issues and other URLErrors, treat as a server error
+                // For other URLErrors, treat as a server error
                 throw NetworkError.serverError(statusCode: 0, data: nil)
             }
         } catch {

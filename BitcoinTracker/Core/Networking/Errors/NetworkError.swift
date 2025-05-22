@@ -12,6 +12,7 @@ enum NetworkError: Error, LocalizedError {
     case unknownResponseType
     case noData
     case decodingError(Error)
+    case networkConnectivity(Error)
 
     var errorDescription: String? {
         switch self {
@@ -26,6 +27,8 @@ enum NetworkError: Error, LocalizedError {
             return "No data was received from the server."
         case .decodingError(let error):
             return "Failed to decode the response: \(error.localizedDescription)"
+        case .networkConnectivity(let error):
+            return "Network connectivity issue: \(error.localizedDescription)"
         }
     }
 }
