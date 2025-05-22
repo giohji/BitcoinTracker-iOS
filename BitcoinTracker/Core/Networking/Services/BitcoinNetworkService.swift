@@ -4,10 +4,9 @@
 //
 //  Created by Guilherme Giohji Hoshino on 21/05/2025.
 //
-
 import Foundation
 
-class BitcoinNetworkService: BitcoinNetworkingProtocol {
+final class BitcoinNetworkService: BitcoinNetworkingProtocol {
 
     private let baseURL = URL(string: "https://api.coingecko.com/api/v3")!
     private let session: URLSession
@@ -41,8 +40,7 @@ class BitcoinNetworkService: BitcoinNetworkingProtocol {
         components.queryItems = [
             URLQueryItem(name: "vs_currency", value: "eur"),
             URLQueryItem(name: "from", value: String(Int(from))),
-            URLQueryItem(name: "to", value: String(Int(to))),
-            URLQueryItem(name: "interval", value: "daily"),
+            URLQueryItem(name: "to", value: String(Int(to)))
         ]
 
         guard let url = components.url else {
@@ -55,8 +53,11 @@ class BitcoinNetworkService: BitcoinNetworkingProtocol {
     // MARK: - Generic Request Handler with async/await
     private func performRequest<T: Codable>(url: URL) async throws -> T {
         var request = URLRequest(url: url)
-        request.setValue(Configuration.coingeckoDemoAPIKey, forHTTPHeaderField: "x-cg-pro-api-key")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Use demo API key if available, if Keys.xcconfig is removed from project the API is still accessible through public keyless API for now.
+        if let apiKey = Configuration.coingeckoDemoAPIKey {
+            request.setValue(apiKey, forHTTPHeaderField: "x-cg-demo-api-key")
+        }
+        request.setValue("application/json", forHTTPHeaderField: "accept")
 
         let (data, response) = try await session.data(for: request)
 

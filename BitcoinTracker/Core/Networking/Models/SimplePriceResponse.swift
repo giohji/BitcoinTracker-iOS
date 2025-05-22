@@ -4,7 +4,6 @@
 //
 //  Created by Guilherme Giohji Hoshino on 21/05/2025.
 //
-
 import Foundation
 
 struct SimplePriceResponse: Codable {

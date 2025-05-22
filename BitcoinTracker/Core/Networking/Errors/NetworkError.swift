@@ -17,8 +17,9 @@ enum NetworkError: Error, LocalizedError {
         switch self {
         case .invalidURL:
             return "The URL provided was invalid."
-        case .serverError(let statusCode, _):
-            return "Server error with status code: \(statusCode)."
+        case .serverError(let statusCode, let data):
+            let messageBody = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No data provided."
+            return "Server error with status code \(statusCode): \(messageBody)"
         case .unknownResponseType:
             return "The server returned an unknown response type."
         case .noData:

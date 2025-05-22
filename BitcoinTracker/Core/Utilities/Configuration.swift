@@ -4,7 +4,6 @@
 //
 //  Created by Guilherme Giohji Hoshino on 21/05/2025.
 //
-
 import Foundation
 
 enum Configuration {
@@ -30,11 +29,7 @@ enum Configuration {
 }
 
 extension Configuration {
-    static var coingeckoDemoAPIKey: String {
-        do {
-            return try value(for: "CoingeckoDemoAPIKey")
-        } catch {
-            fatalError("Failed to load CoingeckoDemoAPIKey from Info.plist: \(error)")
-        }
+    static var coingeckoDemoAPIKey: String? {
+        return try? value(for: "CoingeckoDemoAPIKey")
     }
 }
